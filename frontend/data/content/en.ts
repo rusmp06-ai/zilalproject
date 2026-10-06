@@ -129,6 +129,26 @@ export const en: Translation<typeof ru> = {
     dialogDescription:
       "Choose interests for a future itinerary. This example runs only in your browser and sends no data.",
   },
+  editorial: {
+    issue: "Journeys with character · Kyrgyzstan",
+    introCaption: "Culture and people · space for photography",
+    teamCaption: "The ZILAL team · space for a portrait",
+    approach: "Discover our approach",
+    allTours: "All journeys",
+    allDestinations: "Explore destinations",
+    allStories: "Open the journal",
+    journalInvitation: "Before the journey",
+    journalText:
+      "Stories about places, culture and details to help you imagine your trip.",
+    galleryLink: "Explore the gallery",
+    experienceMoods: {
+      trails: "Head into the mountains",
+      nomads: "Discover the culture",
+      lakes: "Slow down",
+    },
+    readStory: "Read the story",
+    tourDetails: "Explore the journey",
+  },
   footer: {
     description: "Thoughtful journeys.\nAuthentic Kyrgyzstan.",
     navigation: "Explore",

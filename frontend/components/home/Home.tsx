@@ -1,167 +1,167 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePlatform } from "@/components/providers/PlatformProvider";
 import { ui } from "@/data/content/platform";
 import { money } from "@/lib/platform";
-import Image from "next/image";
 import { content as t } from "@/data/content";
 import { Button, Landscape, SectionHeading } from "@/components/ui/Primitives";
+import type { Entity } from "@/types/platform";
 
+function Arrow() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+    >
+      <path d="M5 19 19 5M5 5h14v14" />
+    </svg>
+  );
+}
 export function Home() {
   const { data } = usePlatform();
-  const published = (
-    key:
-      | "tours"
-      | "destinations"
-      | "experiences"
-      | "journal"
-      | "gallery"
-      | "reviews",
-  ) => data.collections[key].filter((r) => r.status === "Опубликован");
-  const tours = published("tours")
-    .slice(0, 3)
-    .map((r) => ({
-      ...r,
-      ...r.fields,
-      label: r.fields.label,
-      duration: r.fields.days + " " + ui.tour.daysShort,
-      season: r.fields.season,
-      price: money(r.fields.amount, r.fields.currency),
-      difficulty: r.fields.difficulty,
-      group: r.fields.maxGroup + " " + ui.tour.peopleShort,
-    }));
-  const destinations = published("destinations")
-    .slice(0, 4)
-    .map((r) => ({ ...r, label: r.fields.label }));
-  const experiences = published("experiences")
-    .slice(0, 3)
-    .map((r) => ({ ...r, label: r.fields.label }));
-  const journal = published("journal")
-    .slice(0, 2)
-    .map((r) => ({ ...r, label: r.fields.label }));
-  const gallery = published("gallery")
-    .slice(0, 4)
-    .map((r) => ({ ...r, caption: r.title }));
-  const reviews = published("reviews")
-    .slice(0, 2)
-    .map((r) => ({
-      ...r,
-      quote: r.fields.quote,
-      name: r.fields.author,
-      trip: r.description,
-    }));
+  const published = (key: Entity) =>
+    data.collections[key].filter((row) => row.status === "Опубликован");
+  const tours = published("tours").slice(0, 3);
+  const destinations = published("destinations").slice(0, 4);
+  const experiences = published("experiences").slice(0, 3);
+  const journal = published("journal").slice(0, 3);
+  const gallery = published("gallery").slice(0, 4);
+  const reviews = published("reviews").slice(0, 2);
   return (
-    <>
-      <section className="hero" aria-labelledby="hero-title">
-        <Image
-          src={data.settings.heroImage}
-          alt={t.hero.location}
-          fill
-          priority
-          sizes="100vw"
-          className="hero-image"
-        />
-        <div className="hero-shade" />
-        <div className="container hero-content">
+    <div className="editorial-home">
+      <section className="edition-hero" aria-labelledby="hero-title">
+        <div className="edition-hero-copy">
           <p className="eyebrow">{t.hero.eyebrow}</p>
           <h1 id="hero-title">{data.settings.heroTitle}</h1>
-          <p className="hero-description">{data.settings.heroDescription}</p>
-          <div className="hero-actions">
-            <Button href="/tours">{t.hero.action}</Button>
-            <Link className="hero-secondary" href="/destinations">
-              {t.hero.secondary} <span aria-hidden="true">↓</span>
-            </Link>
-          </div>
+          <p className="edition-deck">{data.settings.heroDescription}</p>
+          <Button href="/tours">{t.hero.action}</Button>
+          <p className="edition-issue">{t.editorial.issue}</p>
         </div>
-        <div className="container hero-bottom">
-          <span>{t.hero.bottom}</span>
-          <span>{t.hero.placeholder}</span>
-        </div>
+        <figure className="edition-hero-art">
+          <Image
+            src={data.settings.heroImage}
+            alt={t.hero.location}
+            fill
+            priority
+            sizes="(min-width: 1024px) 56vw, 100vw"
+          />
+          <figcaption>{t.hero.placeholder}</figcaption>
+        </figure>
       </section>
-      <section id="about" className="section container intro" data-reveal>
-        <SectionHeading {...t.intro} />
-        <div className="intro-copy">
+      <div className="container edition-opening">
+        <span>{t.hero.bottom}</span>
+        <a href="#about">
+          {t.hero.secondary} <span aria-hidden="true">↓</span>
+        </a>
+      </div>
+
+      <section
+        id="about"
+        className="container section edition-intro"
+        data-reveal
+      >
+        <div className="edition-intro-copy">
+          <SectionHeading eyebrow={t.intro.eyebrow} title={t.intro.title} />
           <p className="large-copy">{t.intro.description}</p>
           <p>{t.intro.detail}</p>
-          <span className="signature">{t.brand}</span>
+          <Link className="text-link" href="/about">
+            {t.editorial.approach} <Arrow />
+          </Link>
         </div>
+        <figure className="edition-portrait">
+          <Landscape src="/images/steppe.svg" alt="" />
+          <figcaption>{t.editorial.introCaption}</figcaption>
+        </figure>
       </section>
-      <section id="experiences" className="section container" data-reveal>
+
+      <section
+        id="experiences"
+        className="container section edition-experiences"
+        data-reveal
+      >
         <SectionHeading {...t.experiences} />
-        <div className="grid-three">
+        <div className="edition-moods">
           {experiences.map((item, index) => (
-            <Link
-              className="experience-card"
-              key={item.id}
-              href={`/experiences/${item.slug}`}
-            >
-              <Landscape src={item.image} alt={item.title} />
-              <div className="experience-overlay">
-                <span className="eyebrow">{item.label}</span>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </div>
-              <span className="card-arrow" aria-hidden="true">
-                <svg
-                  aria-hidden="true"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                >
-                  <path d="M5 19 19 5M5 5h14v14" />
-                </svg>
-              </span>
-              <span className="card-number" aria-hidden="true">
-                0{index + 1}
-              </span>
-            </Link>
+            <article key={item.id}>
+              <Link
+                href={`/experiences/${item.slug}`}
+                className="edition-mood-image"
+                tabIndex={-1}
+                aria-hidden="true"
+              >
+                <Landscape src={item.image} alt="" />
+                <span aria-hidden="true">0{index + 1}</span>
+              </Link>
+              <p className="eyebrow">{item.fields.label}</p>
+              <h3>
+                <Link href={`/experiences/${item.slug}`}>
+                  {t.editorial.experienceMoods[
+                    item.id as keyof typeof t.editorial.experienceMoods
+                  ] || item.title}{" "}
+                  <Arrow />
+                </Link>
+              </h3>
+              <p>{item.description}</p>
+            </article>
           ))}
         </div>
       </section>
-      <section id="tours" className="section tours-section" data-reveal>
+
+      <section id="tours" className="section edition-tours" data-reveal>
         <div className="container">
-          <SectionHeading {...t.tours} />
+          <div className="edition-section-top">
+            <SectionHeading {...t.tours} />
+            <Link className="text-link" href="/tours">
+              {t.editorial.allTours} <Arrow />
+            </Link>
+          </div>
           <div className="grid-three">
             {tours.map((item) => (
-              <article key={item.id} className="tour-card">
-                <Landscape src={item.image} alt={item.title} />
-                <div className="tour-body">
-                  <p className="eyebrow">{item.label}</p>
-                  <h3>{item.title}</h3>
+              <article key={item.id} className="edition-tour">
+                <Link
+                  href={`/tours/${item.slug}`}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                >
+                  <Landscape src={item.image} alt="" />
+                </Link>
+                <div className="edition-tour-copy">
+                  <p className="eyebrow">{item.fields.label}</p>
+                  <h3>
+                    <Link href={`/tours/${item.slug}`}>{item.title}</Link>
+                  </h3>
                   <p>{item.description}</p>
-                  <div className="tour-meta">
-                    <span>{item.duration}</span>
-                    <span>{item.season}</span>
+                  <div className="edition-tour-facts">
+                    <span>
+                      {item.fields.days} {ui.tour.daysShort}
+                    </span>
+                    <span>{item.fields.difficulty}</span>
+                    <span>
+                      {ui.tour.upTo} {item.fields.maxGroup}{" "}
+                      {ui.tour.peopleShort}
+                    </span>
                   </div>
-                  <div className="tour-extra">
-                    <span>{item.group}</span>
-                    <span>{item.difficulty}</span>
-                  </div>
-                  <div className="tour-price">
+                  <p className="edition-tour-season">{item.fields.season}</p>
+                  <div className="edition-tour-price">
                     <div>
                       <small>{t.tours.priceLabel}</small>
-                      <strong>{item.price}</strong>
+                      <strong>
+                        {money(item.fields.amount, item.fields.currency)}
+                      </strong>
                       <small>{t.tours.perPerson}</small>
                     </div>
                     <Link
+                      className="text-link"
                       href={`/tours/${item.slug}`}
-                      aria-label={`${t.tours.action}: ${item.title}`}
-                      className="round-link"
+                      aria-label={`${t.editorial.tourDetails}: ${item.title}`}
                     >
-                      <svg
-                        aria-hidden="true"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      >
-                        <path d="M5 19 19 5M5 5h14v14" />
-                      </svg>
+                      {ui.details} <Arrow />
                     </Link>
                   </div>
                 </div>
@@ -171,48 +171,20 @@ export function Home() {
           <p className="demo-note">{t.tours.note}</p>
         </div>
       </section>
-      <section id="destinations" className="section container" data-reveal>
-        <div className="heading-split">
-          <SectionHeading {...t.destinations} />
-          <p>{t.destinations.description}</p>
-        </div>
-        <div className="grid-four">
-          {destinations.map((item) => (
-            <Link
-              href={`/destinations/${item.slug}`}
-              key={item.id}
-              className="destination-card"
-            >
-              <Landscape src={item.image} alt={item.title} />
-              <p className="eyebrow">{item.label}</p>
-              <h3>
-                {item.title}
-                <span aria-hidden="true">
-                  <svg
-                    aria-hidden="true"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                  >
-                    <path d="M5 19 19 5M5 5h14v14" />
-                  </svg>
-                </span>
-              </h3>
-              <p>{item.description}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <section className="section why-section" data-reveal>
-        <div className="container why-grid">
-          <SectionHeading {...t.why} light />
-          <div className="why-items">
+
+      <section className="container section edition-trust" data-reveal>
+        <figure className="edition-team-placeholder">
+          <div aria-hidden="true">
+            <span>△</span>
+          </div>
+          <figcaption>{t.editorial.teamCaption}</figcaption>
+        </figure>
+        <div>
+          <SectionHeading {...t.why} />
+          <div className="edition-values">
             {t.why.items.map((item, index) => (
               <div key={item.title}>
-                <span className="why-number">0{index + 1}</span>
+                <span aria-hidden="true">0{index + 1}</span>
                 <div>
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
@@ -220,15 +192,19 @@ export function Home() {
               </div>
             ))}
           </div>
+          <Link className="text-link" href="/about">
+            {t.editorial.approach} <Arrow />
+          </Link>
         </div>
       </section>
-      <section id="kyrgyzstan" className="country-section" data-reveal>
-        <div className="country-image">
-          <Landscape src="/images/mountains.svg" alt={t.country.caption} />
-          <span>{t.country.caption}</span>
-        </div>
-        <div className="country-copy">
-          <SectionHeading {...t.country} />
+
+      <section id="kyrgyzstan" className="edition-country" data-reveal>
+        <figure>
+          <Landscape src="/images/mountains.svg" alt="" />
+          <figcaption>{t.country.caption}</figcaption>
+        </figure>
+        <div className="container edition-country-copy">
+          <SectionHeading eyebrow={t.country.eyebrow} title={t.country.title} />
           <p>{t.country.description}</p>
           <p className="country-detail">{t.country.detail}</p>
           <Button href="/experiences" secondary>
@@ -236,65 +212,147 @@ export function Home() {
           </Button>
         </div>
       </section>
-      <section id="journal" className="section container" data-reveal>
-        <SectionHeading {...t.journal} />
-        <div className="grid-two">
-          {journal.map((item) => (
-            <article key={item.id} className="journal-card">
-              <Landscape src={item.image} alt={item.title} />
-              <p className="eyebrow">{item.label}</p>
-              <h3>
-                <Link href={`/journal/${item.slug}`}>{item.title}</Link>
-              </h3>
-              <p>{item.description}</p>
-            </article>
+
+      <section
+        id="destinations"
+        className="container section edition-destinations"
+        data-reveal
+      >
+        <div className="edition-section-top">
+          <SectionHeading {...t.destinations} />
+          <Link className="text-link" href="/destinations">
+            {t.editorial.allDestinations} <Arrow />
+          </Link>
+        </div>
+        <div className="edition-places">
+          {destinations.map((item, index) => (
+            <Link
+              href={`/destinations/${item.slug}`}
+              key={item.id}
+              className="edition-place"
+            >
+              <span className="edition-place-number" aria-hidden="true">
+                0{index + 1}
+              </span>
+              <Landscape src={item.image} alt="" />
+              <div>
+                <p className="eyebrow">{item.fields.label}</p>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </div>
+              <span className="edition-place-arrow">
+                <Arrow />
+              </span>
+            </Link>
           ))}
         </div>
-        <p className="demo-note">{t.journal.note}</p>
       </section>
-      <section className="section gallery-section" data-reveal>
+
+      <section
+        id="journal"
+        className="container section edition-journal"
+        data-reveal
+      >
+        <div className="edition-section-top">
+          <SectionHeading {...t.journal} />
+          <Link className="text-link" href="/journal">
+            {t.editorial.allStories} <Arrow />
+          </Link>
+        </div>
+        <div className="edition-stories">
+          {journal.map((item, index) => (
+            <article
+              key={item.id}
+              className={
+                index === 0 ? "edition-story-feature" : "edition-story-small"
+              }
+            >
+              <Link
+                href={`/journal/${item.slug}`}
+                aria-hidden="true"
+                tabIndex={-1}
+              >
+                <Landscape src={item.image} alt="" />
+              </Link>
+              <div>
+                <p className="eyebrow">{item.fields.label}</p>
+                <h3>
+                  <Link href={`/journal/${item.slug}`}>{item.title}</Link>
+                </h3>
+                <p>{item.description}</p>
+                <Link
+                  className="text-link"
+                  href={`/journal/${item.slug}`}
+                  aria-label={`${t.editorial.readStory}: ${item.title}`}
+                >
+                  {t.editorial.readStory} <Arrow />
+                </Link>
+              </div>
+            </article>
+          ))}
+          {journal.length < 3 && (
+            <aside className="edition-journal-invitation">
+              <p className="eyebrow">{t.editorial.journalInvitation}</p>
+              <p>{t.editorial.journalText}</p>
+              <Link className="text-link" href="/journal">
+                {t.editorial.allStories} <Arrow />
+              </Link>
+            </aside>
+          )}
+        </div>
+      </section>
+
+      <section className="section edition-gallery" data-reveal>
         <div className="container">
-          <SectionHeading {...t.gallery} />
-          <div className="gallery-grid">
+          <div className="edition-section-top">
+            <SectionHeading {...t.gallery} />
+            <Link className="text-link" href="/gallery">
+              {t.editorial.galleryLink} <Arrow />
+            </Link>
+          </div>
+          <div className="edition-mosaic">
             {gallery.map((item) => (
-              <figure key={item.caption}>
-                <Landscape src={item.image} alt={item.caption} />
-                <figcaption>{item.caption}</figcaption>
+              <figure key={item.id}>
+                <Landscape src={item.image} alt="" />
+                <figcaption>{item.title}</figcaption>
               </figure>
             ))}
           </div>
           <p className="demo-note">{t.gallery.caption}</p>
         </div>
       </section>
-      <section className="section container" data-reveal>
+
+      <section className="container section edition-reviews" data-reveal>
         <SectionHeading {...t.reviews} />
+        <p className="demo-note">{t.reviews.note}</p>
         <div className="grid-two reviews-grid">
           {reviews.map((item) => (
             <figure key={item.id}>
               <span className="quote-mark" aria-hidden="true">
                 “
               </span>
-              <blockquote>{item.quote}</blockquote>
+              <blockquote>{item.fields.quote}</blockquote>
               <figcaption>
-                <strong>{item.name}</strong>
-                <span>{item.trip}</span>
+                <strong>{item.fields.author}</strong>
+                <span>{item.description}</span>
               </figcaption>
             </figure>
           ))}
         </div>
-        <p className="demo-note">{t.reviews.note}</p>
       </section>
-      <section id="plan" className="section cta-section" data-reveal>
+
+      <section id="plan" className="section edition-finale" data-reveal>
         <div className="container">
-          <span className="cta-symbol" aria-hidden="true">
-            △
-          </span>
-          <SectionHeading {...t.cta} />
-          <p className="cta-description">{t.cta.description}</p>
+          <p className="eyebrow">{t.cta.eyebrow}</p>
+          <h2>{t.cta.title}</h2>
+          <p>{t.cta.description}</p>
           <Button href="/plan">{t.plan}</Button>
           <p className="demo-note">{t.cta.note}</p>
         </div>
+        <span className="edition-finale-mark" aria-hidden="true">
+          △
+        </span>
       </section>
-    </>
+    </div>
   );
 }
