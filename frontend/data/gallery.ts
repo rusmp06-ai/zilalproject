@@ -1,0 +1,1 @@
+export const gallery = [{image:'/images/lake.svg',caption:'Озёрный свет'},{image:'/images/valley.svg',caption:'Горные линии'},{image:'/images/steppe.svg',caption:'Тепло земли'},{image:'/images/mountains.svg',caption:'Ближе к небу'}];

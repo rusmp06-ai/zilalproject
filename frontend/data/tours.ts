@@ -1,0 +1,5 @@
+import type { Tour } from '@/types/content';
+export const tours: Tour[] = [
+{id:'issyk-kul',title:'Иссык-Куль. Между небом и водой',description:'Озеро, ущелья и маленькие открытия по дороге.',image:'/images/lake.svg',label:'ОЗЁРА И ГОРЫ',duration:'5 дней',season:'Май — сентябрь',price:'650 $',difficulty:'Лёгкий',group:'До 6 человек'},
+{id:'song-kul',title:'Сон-Куль. Тишина высокогорья',description:'Ночи в юрте и бескрайние пастбища.',image:'/images/steppe.svg',label:'КОЧЕВАЯ КУЛЬТУРА',duration:'3 дня',season:'Июнь — август',price:'420 $',difficulty:'Умеренный',group:'До 6 человек'},
+{id:'tian-shan',title:'Тянь-Шань. Навстречу вершинам',description:'Горные тропы, свежий воздух и новые горизонты.',image:'/images/mountains.svg',label:'АКТИВНОЕ ПУТЕШЕСТВИЕ',duration:'7 дней',season:'Июль — сентябрь',price:'980 $',difficulty:'Средний',group:'До 8 человек'}];
