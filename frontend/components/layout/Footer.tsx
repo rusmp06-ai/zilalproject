@@ -1,2 +1,59 @@
-import {content as t} from '@/data/content';
-export function Footer(){return <footer id="contact" className="footer"><div className="container footer-grid"><div><a className="footer-brand" href="#top">{t.brand}</a><p>{t.footer.description}</p><span className="eyebrow">{t.footer.place}</span></div><div><h3>{t.footer.navigation}</h3><nav>{t.nav.filter(item=>item.href!=='#contact').map(item=><a key={item.href} href={item.href}>{item.label}</a>)}</nav></div><div><h3>{t.footer.contactTitle}</h3><p>{t.footer.contactDescription}</p><a className="text-link" href="#plan">{t.plan} <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M5 19 19 5M5 5h14v14"/></svg></a></div></div><div className="container footer-bottom"><span>© 2026 {t.footer.copyright}</span><span>{t.footer.status}</span><a href="#top">{t.footer.top} ↑</a></div></footer>}
+"use client";
+import { usePlatform } from "@/components/providers/PlatformProvider";
+import { ui } from "@/data/content/platform";
+import { content as t } from "@/data/content";
+export function Footer() {
+  const { data } = usePlatform();
+  return (
+    <footer id="contact" className="footer">
+      <div className="container footer-grid">
+        <div>
+          <a className="footer-brand" href="/">
+            {t.brand}
+          </a>
+          <p>{t.footer.description}</p>
+          <span className="eyebrow">
+            {data.settings.address || t.footer.place}
+          </span>
+        </div>
+        <div>
+          <h3>{t.footer.navigation}</h3>
+          <nav>
+            {t.nav
+              .filter((item) => item.href !== "/contacts")
+              .map((item) => (
+                <a key={item.href} href={item.href}>
+                  {item.label}
+                </a>
+              ))}
+          </nav>
+        </div>
+        <div>
+          <h3>{t.footer.contactTitle}</h3>
+          <p>{data.settings.email || t.footer.contactDescription}</p>
+          <a href="/gallery">{ui.catalog.gallery.eyebrow}</a>
+          <br />
+          <a className="text-link" href="/plan">
+            {t.plan}{" "}
+            <svg
+              aria-hidden="true"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+            >
+              <path d="M5 19 19 5M5 5h14v14" />
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div className="container footer-bottom">
+        <span>© 2026 {t.footer.copyright}</span>
+        <span>{t.footer.status}</span>
+        <a href="/">{t.footer.top} ↑</a>
+      </div>
+    </footer>
+  );
+}

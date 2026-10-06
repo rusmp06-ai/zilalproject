@@ -1,0 +1,262 @@
+import { tours } from "./tours";
+import { destinations } from "./destinations";
+import { experiences } from "./experiences";
+import { journal } from "./journal";
+import { gallery } from "./gallery";
+import { reviews } from "./reviews";
+import { content } from "./content";
+import type { Item, PlatformData } from "@/types/platform";
+const item = (
+  id: string,
+  title: string,
+  fields: Record<string, string> = {},
+  status = "Опубликован",
+  description = "",
+  image = "/images/lake.svg",
+): Item => ({ id, slug: id, title, description, image, status, fields });
+const itinerary: Record<string, string> = {
+  "issyk-kul":
+    "Встреча в Бишкеке и знакомство с маршрутом.\nПереезд к Иссык-Кулю и прогулка у воды.\nУщелья южного берега и неспешный пикник.\nКаракол: прогулка по городу и местная кухня.\nВозвращение в Бишкек с остановками по дороге.",
+  "song-kul":
+    "Выезд из Бишкека и дорога к высокогорному озеру.\nПрогулка по пастбищам, знакомство с жизнью в юрте.\nУтро на озере и возвращение в город.",
+  "tian-shan":
+    "Встреча и подготовка снаряжения.\nПереезд в Каракол и знакомство с командой.\nПервый день на горной тропе.\nПрогулка к высокогорному озеру.\nДень отдыха и короткие прогулки.\nСпуск в долину.\nВозвращение и завершение путешествия.",
+};
+export const seed: PlatformData = {
+  version: 1,
+  settings: {
+    company: "ZILAL TRAVEL",
+    email: "",
+    phone: "",
+    address: "Бишкек, Кыргызстан",
+    heroTitle: content.hero.title,
+    heroDescription: content.hero.description,
+    heroImage: "/images/lake.svg",
+  },
+  activity: [],
+  collections: {
+    tours: tours.map((t, index) =>
+      item(
+        t.id,
+        t.title,
+        {
+          destination:
+            index === 0 ? "issyk-kul" : index === 1 ? "song-kul" : "karakol",
+          experience: index === 0 ? "lakes" : index === 1 ? "nomads" : "trails",
+          category: ["Многодневный", "Индивидуальный", "Групповой"][index],
+          days: String([5, 3, 7][index]),
+          amount: String([650, 420, 980][index]),
+          currency: "USD",
+          season: t.season,
+          maxGroup: String(index === 2 ? 8 : 6),
+          difficulty: t.difficulty,
+          label: t.label,
+          body:
+            t.description +
+            " Это пример программы: темп и остановки можно адаптировать под интересы путешественников.",
+          itinerary: itinerary[t.id],
+          included:
+            "Сопровождение гида\nПереезды по программе\nПроживание по маршруту",
+          excluded: "Авиабилеты\nСтрахование\nЛичные расходы",
+          stay: "Пример: гостевые дома и небольшие отели. На Сон-Куле — юрточный лагерь.",
+          transport: "Пример: автомобиль или микроавтобус по размеру группы.",
+          faq: "Можно ли изменить программу? | Да, в примере предусмотрено индивидуальное обсуждение маршрута.\nНужна ли подготовка? | Зависит от сложности тура; обсудите нагрузку до бронирования.",
+          seoTitle: t.title,
+          seoDescription: t.description,
+        },
+        "Опубликован",
+        t.description,
+        t.image,
+      ),
+    ),
+    destinations: destinations.map((d) =>
+      item(
+        d.id,
+        d.title,
+        {
+          label: d.label,
+          body:
+            d.description +
+            " Здесь можно замедлиться, узнать местную культуру и открыть пейзажи Кыргызстана. Конкретный маршрут зависит от сезона и ваших интересов.",
+          season: "Май — сентябрь",
+        },
+        "Опубликован",
+        d.description,
+        d.image,
+      ),
+    ),
+    experiences: experiences.map((e) =>
+      item(
+        e.id,
+        e.title,
+        {
+          label: e.label,
+          body:
+            e.description +
+            " Выбирайте впечатления по своему настроению. Сочетайте природные маршруты с культурными встречами и временем для отдыха.",
+        },
+        "Опубликован",
+        e.description,
+        e.image,
+      ),
+    ),
+    journal: journal.map((j, index) =>
+      item(
+        j.id,
+        j.title,
+        {
+          label: j.label,
+          readingTime: index ? "4 минуты" : "5 минут",
+          body: index
+            ? "Ночь в юрте — знакомство с пространством, в котором всё имеет своё место. Войлок сохраняет тепло, а круглая форма собирает людей вокруг общего очага.\n\nВысокогорные ночи бывают холодными даже летом. Возьмите тёплые слои одежды и заранее уточните условия проживания.\n\nЭто демонстрационный редакционный материал. Подробную практическую информацию добавим перед запуском."
+            : "Весна приносит цветение долин, лето открывает высокогорные дороги, а осень окрашивает ущелья. Зимой можно познакомиться с другим, более тихим Кыргызстаном.\n\nДля поездки к Сон-Кулю обычно выбирают лето. Иссык-Куль и городские маршруты дают больше вариантов сезона. Условия в горах меняются: проверяйте дорогу и погоду перед выездом.\n\nЭто демонстрационный редакционный материал, а не актуальная дорожная сводка.",
+        },
+        "Опубликован",
+        j.description,
+        j.image,
+      ),
+    ),
+    gallery: gallery.map((g, index) =>
+      item(
+        "image-" + index,
+        g.caption,
+        { alt: g.caption, destination: index === 0 ? "issyk-kul" : "karakol" },
+        "Опубликован",
+        "",
+        g.image,
+      ),
+    ),
+    reviews: reviews.map((r) =>
+      item(
+        r.id,
+        r.name,
+        { author: r.name, quote: r.quote, tour: "issyk-kul", demo: "Да" },
+        "Опубликован",
+        r.trip,
+      ),
+    ),
+    employees: [
+      item(
+        "manager-1",
+        "Менеджер · пример",
+        { role: "Менеджер", email: "manager@example.com" },
+        "Активный",
+        "Демонстрационный сотрудник",
+      ),
+    ],
+    customers: [
+      item(
+        "customer-1",
+        "Анна · пример",
+        {
+          country: "Кыргызстан",
+          email: "anna@example.com",
+          language: "Русский",
+          preferences: "Озёра и спокойные маршруты",
+        },
+        "Активный",
+        "Демонстрационный клиент",
+      ),
+    ],
+    leads: [
+      item(
+        "lead-1",
+        "Анна · знакомство с Иссык-Кулем",
+        {
+          email: "anna@example.com",
+          country: "Кыргызстан",
+          people: "2",
+          interests: "Озёра и отдых",
+          tour: "issyk-kul",
+          manager: "manager-1",
+          customer: "customer-1",
+          budget: "700",
+        },
+        "Предложение отправлено",
+        "Демонстрационная заявка",
+      ),
+      item(
+        "lead-2",
+        "Горное путешествие · пример",
+        {
+          email: "guest@example.com",
+          people: "4",
+          tour: "tian-shan",
+          budget: "1000",
+        },
+        "Новый",
+        "Хочется узнать программу активного тура",
+      ),
+    ],
+    bookings: [
+      item(
+        "booking-1",
+        "Иссык-Куль · пример поездки",
+        {
+          customer: "customer-1",
+          tour: "issyk-kul",
+          start: "2027-06-12",
+          people: "2",
+          amount: "1300",
+          currency: "USD",
+          paymentStatus: "Частично",
+          manager: "manager-1",
+          partner: "partner-1",
+          transport: "Минивэн",
+        },
+        "Подтверждено",
+        "Демонстрационное бронирование",
+      ),
+    ],
+    partners: [
+      item(
+        "partner-1",
+        "Гостевой дом · пример",
+        { type: "Отель", region: "Иссык-Куль", email: "stay@example.com" },
+        "Активный",
+        "Демонстрационный партнёр",
+      ),
+    ],
+    payments: [
+      item(
+        "payment-1",
+        "Предоплата · пример",
+        {
+          booking: "booking-1",
+          amount: "400",
+          currency: "USD",
+          date: "2026-10-06",
+          method: "Перевод",
+          reference: "DEMO-001",
+        },
+        "Оплачен",
+        "Демонстрационная операция",
+      ),
+    ],
+  },
+};
+
+seed.collections.tours.push({
+  ...structuredClone(seed.collections.tours[2]),
+  id: "ala-archa-day",
+  slug: "ala-archa-day",
+  title: "Ала-Арча. Один день среди гор",
+  description: "Прогулка по долине и знакомство с горным Кыргызстаном.",
+  image: "/images/valley.svg",
+  fields: {
+    ...seed.collections.tours[2].fields,
+    destination: "ala-archa",
+    category: "Однодневный",
+    days: "1",
+    amount: "120",
+    maxGroup: "6",
+    difficulty: "Лёгкий",
+    label: "ОДИН ДЕНЬ В ГОРАХ",
+    body: "Демонстрационный маршрут в природный парк Ала-Арча с прогулкой по долине и временем для отдыха.",
+    itinerary:
+      "Выезд из Бишкека, прогулка по долине Ала-Арча, пикник и возвращение.",
+    stay: "Без ночёвки.",
+    seoTitle: "Ала-Арча. Один день среди гор",
+    seoDescription: "Однодневное знакомство с природой Кыргызстана.",
+  },
+});
