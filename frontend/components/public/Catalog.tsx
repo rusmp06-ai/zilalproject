@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePlatform } from "@/components/providers/PlatformProvider";
-import { Landscape, SectionHeading } from "@/components/ui/Primitives";
+import { Landscape, SectionHeading, Button } from "@/components/ui/Primitives";
 import { ui } from "@/data/content/platform";
 import { configs } from "@/data/admin/config";
 import { money, normalizeSearch } from "@/lib/platform";
@@ -41,7 +41,14 @@ export function ContentCard({
                 {item.fields.days} {ui.tour.daysShort}
               </span>
               <span>{item.fields.season}</span>
+              <span>{item.fields.difficulty}</span>
+              <span>
+                {ui.tour.upTo} {item.fields.maxGroup} {ui.tour.peopleShort}
+              </span>
             </div>
+            {item.fields.audience && (
+              <p className="tour-audience">{item.fields.audience}</p>
+            )}
             <div className="catalog-price">
               <span>{money(item.fields.amount, item.fields.currency)}</span>
               <small>{ui.tour.perPerson}</small>
@@ -67,6 +74,7 @@ export function Catalog({ entity }: { entity: PublicEntity }) {
   const [difficulty, setDifficulty] = useState("");
   const [sort, setSort] = useState("original");
   const [currency, setCurrency] = useState("");
+  const [length, setLength] = useState("");
   const rows = data.collections[entity].filter(
     (r) => r.status === "Опубликован",
   );
@@ -84,6 +92,12 @@ export function Catalog({ entity }: { entity: PublicEntity }) {
               (d) => d.id === r.fields.destination,
             )?.title || ""),
         ).includes(normalizeSearch(query)) &&
+        (!length ||
+          (length === "short"
+            ? Number(r.fields.days) <= 3
+            : length === "medium"
+              ? Number(r.fields.days) >= 4 && Number(r.fields.days) <= 6
+              : Number(r.fields.days) >= 7)) &&
         (!category || r.fields.category === category) &&
         (!destination || r.fields.destination === destination) &&
         (!difficulty || r.fields.difficulty === difficulty) &&
@@ -143,6 +157,20 @@ export function Catalog({ entity }: { entity: PublicEntity }) {
                       {d.title}
                     </option>
                   ))}
+              </select>
+            </label>
+            <label>
+              {ui.filters.length}
+              <select
+                aria-label={ui.filters.length}
+                value={length}
+                onChange={(event) => setLength(event.target.value)}
+              >
+                {["", "short", "medium", "long"].map((value, index) => (
+                  <option key={value} value={value}>
+                    {ui.filters.lengths[index]}
+                  </option>
+                ))}
               </select>
             </label>
             <label>
@@ -209,6 +237,7 @@ export function Catalog({ entity }: { entity: PublicEntity }) {
             setDifficulty("");
             setSort("original");
             setCurrency("");
+            setLength("");
           }}
         >
           {ui.reset}
@@ -236,7 +265,27 @@ export function Catalog({ entity }: { entity: PublicEntity }) {
           ))}
         </div>
       )}
-      {!filtered.length && <p className="empty-state">{ui.empty}</p>}
+      {!filtered.length &&
+        (entity === "tours" ? (
+          <div className="catalog-help empty-state">
+            <h2>{ui.filters.emptyTitle}</h2>
+            <p>{ui.filters.emptyText}</p>
+            <Button href="/plan">{ui.plan}</Button>
+          </div>
+        ) : (
+          <p className="empty-state">{ui.empty}</p>
+        ))}
+      {entity === "tours" && filtered.length > 0 && (
+        <section className="catalog-help">
+          <div>
+            <h2>{ui.filters.helpTitle}</h2>
+            <p>{ui.filters.helpText}</p>
+          </div>
+          <Button href="/plan" secondary>
+            {ui.plan}
+          </Button>
+        </section>
+      )}
       <p className="demo-note">
         {entity === "tours" ? ui.tour.demo : ui.illustration}
       </p>

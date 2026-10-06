@@ -2057,3 +2057,118 @@ button:disabled {
 .desktop-nav a[aria-current="page"]:after {
   width: 100%;
 }
+
+/* Tour selection: clear expectations before planning. */
+.tour-meta {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.catalog-card-body .tour-audience {
+  font-size: 12px;
+  color: #52656a;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.catalog-help {
+  margin-top: 42px;
+  padding: 28px;
+  background: #edf7f5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+}
+.catalog-help h2 {
+  font-size: 34px;
+  margin-bottom: 12px;
+}
+.catalog-help p {
+  max-width: 650px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.tour-intro-request {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
+}
+.tour-intro-request small {
+  color: #536976;
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.tour-intro-request strong {
+  display: block;
+  font-size: 26px;
+  font-weight: 500;
+}
+.tour-intro-request strong span {
+  font-size: 12px;
+  font-weight: 400;
+}
+.tour-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  padding-bottom: 28px;
+}
+.tour-section-nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  border-bottom: 1px solid var(--line);
+  color: #006570;
+}
+.detail-main section[id] {
+  scroll-margin-top: 120px;
+}
+.tour-suitability {
+  padding: 28px;
+  background: #f3f5ed;
+}
+.detail-main .tour-suitability h2 {
+  font-size: 34px;
+}
+.tour-suitability h3 {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+.day-preview {
+  display: block;
+  margin: 10px 0 0;
+  font-weight: 400;
+  color: #52656a;
+  line-height: 1.7;
+  font-size: 13px;
+}
+.request-hint {
+  font-size: 13px;
+  line-height: 1.8;
+  margin-block: 18px;
+}
+.request-card .text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 12px;
+}
+@media (min-width: 768px) {
+  .tour-intro-request {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+  .catalog-help {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .catalog-help .button {
+    flex-shrink: 0;
+  }
+}
