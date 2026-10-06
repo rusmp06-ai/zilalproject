@@ -6,7 +6,7 @@ import { ui } from "@/data/content/platform";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 import { validEmail, emailPattern } from "@/lib/platform";
 import { SectionHeading } from "@/components/ui/Primitives";
-export function PlanForm() {
+function DemoPlanForm() {
   const { data, save, ready, error: storageError } = usePlatform();
   const [tour, setTour] = useState("");
   const initialTour = useRef("");
@@ -460,5 +460,20 @@ export function PlanForm() {
         </aside>
       </div>
     </div>
+  );
+}
+
+export function PlanForm() {
+  const { server } = usePlatform();
+  return server ? (
+    <div className="container public-page">
+      <h1>{ui.backend.formTitle}</h1>
+      <p>{ui.backend.formNote}</p>
+      <Link href="/tours" className="button">
+        {ui.catalog.tours.eyebrow}
+      </Link>
+    </div>
+  ) : (
+    <DemoPlanForm />
   );
 }

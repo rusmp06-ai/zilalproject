@@ -4,7 +4,7 @@ import { usePlatform } from "@/components/providers/PlatformProvider";
 import { ui } from "@/data/content/platform";
 import { content as t } from "@/data/content";
 export function Footer() {
-  const { data } = usePlatform();
+  const { data, server } = usePlatform();
   return (
     <footer id="contact" className="footer">
       <div className="container footer-grid">
@@ -52,7 +52,7 @@ export function Footer() {
       </div>
       <div className="container footer-bottom">
         <span>© 2026 {t.footer.copyright}</span>
-        <span>{t.footer.status}</span>
+        <span>{server ? ui.backend.publicNote : t.footer.status}</span>
         <a href="#top">{t.footer.top} ↑</a>
       </div>
     </footer>

@@ -1,3 +1,4 @@
+import { requireContentSection } from "@/services/server";
 import { notFound } from "next/navigation";
 import { EntityEditor } from "@/components/admin/EntityEditor";
 import { entities, type Entity } from "@/types/platform";
@@ -7,6 +8,7 @@ export default async function Page({
   params: Promise<{ section: string; id: string }>;
 }) {
   const { section, id } = await params;
+  await requireContentSection(section);
   if (!entities.includes(section as Entity)) notFound();
   return <EntityEditor entity={section as Entity} id={id} />;
 }

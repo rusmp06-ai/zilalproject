@@ -8,7 +8,7 @@ import { usePlatform } from "@/components/providers/PlatformProvider";
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
-  const { error } = usePlatform();
+  const { error, server, user, logout } = usePlatform();
   useEffect(() => setOpen(false), [path]);
   return (
     <div className="admin-shell">
@@ -32,32 +32,48 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           className={open ? "is-open" : ""}
           aria-label={ui.admin.navigation}
         >
-          {adminNavigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={
-                (
-                  item.href === "/admin"
-                    ? path === item.href
-                    : path.startsWith(item.href)
-                )
-                  ? "active"
-                  : ""
-              }
-              aria-current={
-                (
-                  item.href === "/admin"
-                    ? path === item.href
-                    : path.startsWith(item.href)
-                )
-                  ? "page"
-                  : undefined
-              }
-            >
-              {item.label}
-            </Link>
-          ))}
+          {adminNavigation
+            .filter(
+              (item) =>
+                !server ||
+                item.href === "/admin" ||
+                [
+                  "tours",
+                  "destinations",
+                  "experiences",
+                  "journal",
+                  "gallery",
+                  "reviews",
+                  "activity",
+                  ...(user?.role !== "content_manager" ? ["settings"] : []),
+                ].some((section) => item.href === `/admin/${section}`),
+            )
+            .map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={
+                  (
+                    item.href === "/admin"
+                      ? path === item.href
+                      : path.startsWith(item.href)
+                  )
+                    ? "active"
+                    : ""
+                }
+                aria-current={
+                  (
+                    item.href === "/admin"
+                      ? path === item.href
+                      : path.startsWith(item.href)
+                  )
+                    ? "page"
+                    : undefined
+                }
+              >
+                {item.label}
+              </Link>
+            ))}
         </nav>
         <Link className="admin-site-link" href="/">
           ← {ui.admin.site}
@@ -66,9 +82,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="admin-workspace">
         <header className="admin-topbar">
           <span>{ui.admin.title}</span>
-          <span className="status-pill">{ui.demoShort}</span>
+          <span className="status-pill">
+            {server ? user?.name || ui.backend.server : ui.demoShort}
+          </span>
+          {server && (
+            <button
+              className="small-button"
+              onClick={() =>
+                logout?.().catch(() => window.location.assign("/login"))
+              }
+            >
+              {ui.backend.logout}
+            </button>
+          )}
         </header>
-        <div className="admin-banner">{ui.admin.noProduction}</div>
+        <div className="admin-banner">
+          {server ? ui.backend.adminNote : ui.admin.noProduction}
+        </div>
         {error && (
           <div className="admin-error" role="alert">
             {error}

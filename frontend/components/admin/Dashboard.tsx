@@ -5,7 +5,7 @@ import { ui } from "@/data/content/platform";
 import { leadStatuses, configs } from "@/data/admin/config";
 import { money } from "@/lib/platform";
 export function Dashboard({ reports = false }: { reports?: boolean }) {
-  const { data } = usePlatform();
+  const { data, server } = usePlatform();
   const c = data.collections;
   const active = c.leads.filter(
     (r) => !["Потерян", "Отменён", "Путешествие завершено"].includes(r.status),
@@ -30,6 +30,41 @@ export function Dashboard({ reports = false }: { reports?: boolean }) {
         0,
       ),
   }));
+  if (server)
+    return (
+      <>
+        <div className="admin-page-heading">
+          <div>
+            <p className="eyebrow">{ui.backend.server}</p>
+            <h1>{ui.backend.contentOverview}</h1>
+            <p>{ui.backend.contentOverviewText}</p>
+          </div>
+          <Link className="button" href="/admin/tours/new">
+            {ui.admin.create} · {configs.tours.singular}
+          </Link>
+        </div>
+        <div className="metric-grid">
+          {(["tours", "destinations", "experiences", "journal"] as const).map(
+            (entity) => (
+              <Link
+                className="admin-panel"
+                href={`/admin/${entity}`}
+                key={entity}
+              >
+                <p>{configs[entity].label}</p>
+                <h2>
+                  {
+                    c[entity].filter((row) => row.status === "Опубликован")
+                      .length
+                  }
+                </h2>
+              </Link>
+            ),
+          )}
+        </div>
+        <p className="demo-note">{ui.backend.adminNote}</p>
+      </>
+    );
   return (
     <>
       <div className="admin-page-heading">

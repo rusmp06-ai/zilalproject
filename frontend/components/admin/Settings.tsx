@@ -12,7 +12,7 @@ export function Settings() {
   return <SettingsEditor initial={data.settings} />;
 }
 function SettingsEditor({ initial }: { initial: SettingsType }) {
-  const { data, saveSettings, replace, reset } = usePlatform();
+  const { data, server, saveSettings, replace, reset } = usePlatform();
   const [settings, setSettings] = useState(initial);
   const [baseline, setBaseline] = useState(initial);
   const dirty = !same(settings, baseline);
@@ -37,7 +37,7 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
     setBusy(false);
     if (result.ok) {
       setBaseline(settings);
-      setMessage(ui.admin.saved);
+      setMessage(server ? ui.backend.saveConfirmed : ui.admin.saved);
     } else
       setMessage(
         result.kind === "storage" || result.kind === "corrupt"
@@ -48,8 +48,9 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
   const exportData = () => {
     let payload: string;
     try {
-      payload =
-        localStorage.getItem(storageKey) ?? JSON.stringify(data, null, 2);
+      payload = server
+        ? JSON.stringify(data, null, 2)
+        : (localStorage.getItem(storageKey) ?? JSON.stringify(data, null, 2));
     } catch {
       setMessage(ui.admin.storageError);
       return;
@@ -138,80 +139,95 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
         </form>
         <section className="admin-panel">
           <h2>{ui.admin.dataSettings}</h2>
-          <p>{ui.admin.exportNote}</p>
+          <p>{server ? ui.backend.settingsNote : ui.admin.exportNote}</p>
           <div className="data-actions">
             <button className="small-button" onClick={exportData}>
-              {ui.admin.export}
+              {server ? ui.backend.export : ui.admin.export}
             </button>
-            <button
-              className="small-button"
-              disabled={busy || dirty}
-              onClick={() => upload.current?.click()}
-            >
-              {ui.admin.import}
-            </button>
-            <input
-              ref={upload}
-              type="file"
-              accept="application/json,.json"
-              hidden
-              onChange={async (event) => {
-                const file = event.target.files?.[0];
-                event.target.value = "";
-                if (!file) return;
-                try {
-                  if (file.size > 5_000_000) throw Error();
-                  const parsed: unknown = JSON.parse(await file.text());
-                  if (!validImport(parsed)) throw Error();
-                  if (window.confirm(ui.admin.importConfirm)) {
-                    setBusy(true);
-                    const result = await replace(parsed);
-                    setBusy(false);
-                    if (result.ok) {
-                      setMessage(ui.admin.imported);
-                    } else
-                      setMessage(
-                        result.kind === "storage" || result.kind === "corrupt"
-                          ? ui.admin.saveFailed
-                          : result.error,
-                      );
-                  }
-                } catch {
-                  setMessage(ui.admin.invalidImport);
-                }
-              }}
-            />
-            <button
-              className="delete-link"
-              disabled={busy || dirty}
-              onClick={async () => {
-                if (window.confirm(ui.admin.resetConfirm)) {
-                  setBusy(true);
-                  const result = await reset();
-                  setBusy(false);
-                  if (result.ok) {
-                    setMessage(ui.admin.saved);
-                  } else
-                    setMessage(
-                      result.kind === "storage" || result.kind === "corrupt"
-                        ? ui.admin.saveFailed
-                        : result.error,
-                    );
-                }
-              }}
-            >
-              {ui.admin.reset}
-            </button>
+            {!server && (
+              <button
+                className="small-button"
+                disabled={busy || dirty}
+                onClick={() => upload.current?.click()}
+              >
+                {ui.admin.import}
+              </button>
+            )}
+            {!server && (
+              <>
+                <input
+                  ref={upload}
+                  type="file"
+                  accept="application/json,.json"
+                  hidden
+                  onChange={async (event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    if (!file) return;
+                    try {
+                      if (file.size > 5_000_000) throw Error();
+                      const parsed: unknown = JSON.parse(await file.text());
+                      if (!validImport(parsed)) throw Error();
+                      if (window.confirm(ui.admin.importConfirm)) {
+                        setBusy(true);
+                        const result = await replace(parsed);
+                        setBusy(false);
+                        if (result.ok) {
+                          setMessage(ui.admin.imported);
+                        } else
+                          setMessage(
+                            result.kind === "storage" ||
+                              result.kind === "corrupt"
+                              ? ui.admin.saveFailed
+                              : result.error,
+                          );
+                      }
+                    } catch {
+                      setMessage(ui.admin.invalidImport);
+                    }
+                  }}
+                />
+                <button
+                  className="delete-link"
+                  disabled={busy || dirty}
+                  onClick={async () => {
+                    if (window.confirm(ui.admin.resetConfirm)) {
+                      setBusy(true);
+                      const result = await reset();
+                      setBusy(false);
+                      if (result.ok) {
+                        setMessage(
+                          server ? ui.backend.saveConfirmed : ui.admin.saved,
+                        );
+                      } else
+                        setMessage(
+                          result.kind === "storage" || result.kind === "corrupt"
+                            ? ui.admin.saveFailed
+                            : result.error,
+                        );
+                    }
+                  }}
+                >
+                  {ui.admin.reset}
+                </button>
+              </>
+            )}
           </div>
           <p className="demo-note">
-            {dirty ? ui.admin.importPending : ui.admin.noProduction}
+            {server
+              ? ui.backend.settingsNote
+              : dirty
+                ? ui.admin.importPending
+                : ui.admin.noProduction}
           </p>
         </section>
       </div>
       {message && !(conflict && dirty && message === ui.admin.conflict) && (
         <p
           className={
-            message === ui.admin.saved || message === ui.admin.imported
+            message === ui.admin.saved ||
+            message === ui.backend.saveConfirmed ||
+            message === ui.admin.imported
               ? "admin-feedback"
               : "form-error"
           }

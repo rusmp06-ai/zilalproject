@@ -2718,3 +2718,17 @@ button:disabled {
   flex-shrink: 0;
   align-self: center;
 }
+.login-page {
+  max-width: 640px;
+}
+.login-page h1 {
+  font-size: clamp(42px, 6vw, 68px);
+  margin-block: 20px;
+}
+.login-page > p {
+  margin-bottom: 26px;
+}
+.login-page form {
+  display: grid;
+  gap: 24px;
+}

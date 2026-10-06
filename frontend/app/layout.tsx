@@ -9,21 +9,28 @@ import "@fontsource/manrope/cyrillic-600.css";
 import "@fontsource/manrope/latin-600.css";
 import "./globals.css";
 import { PlatformProvider } from "@/components/providers/PlatformProvider";
+import { publicData, serverMode } from "@/services/server";
 import { content as t } from "@/data/content";
-export const metadata: Metadata = {
-  title: `${t.brand} — ${t.brandCaption}`,
-  description: t.hero.description,
-  robots: { index: false, follow: false },
-};
-export default function RootLayout({
+export async function generateMetadata(): Promise<Metadata> {
+  const data = await publicData();
+  return {
+    title: `${data.settings.company} — ${t.brandCaption}`,
+    description: data.settings.heroDescription,
+    robots: { index: false, follow: false },
+  };
+}
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const initial = serverMode() ? await publicData() : undefined;
   return (
     <html lang="ru">
       <body>
-        <PlatformProvider>{children}</PlatformProvider>
+        <PlatformProvider initial={initial} server={serverMode()}>
+          {children}
+        </PlatformProvider>
       </body>
     </html>
   );

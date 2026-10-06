@@ -7,6 +7,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { ServerPlatformProvider } from "./ServerPlatformProvider";
 import { seed } from "@/data/platform";
 import { ui } from "@/data/content/platform";
 import { configs } from "@/data/admin/config";
@@ -27,7 +28,10 @@ import {
   type MutationResult,
   type Activity,
 } from "@/types/platform";
-type Store = {
+export type Store = {
+  server: boolean;
+  user?: { id: string; name: string; role: string };
+  logout?: () => Promise<void>;
   data: PlatformData;
   ready: boolean;
   error: string;
@@ -48,7 +52,7 @@ type Store = {
   replace: (data: PlatformData) => Promise<MutationResult>;
   reset: () => Promise<MutationResult>;
 };
-const Context = createContext<Store | null>(null);
+export const Context = createContext<Store | null>(null);
 function activity(entity: string, title: string, action: string): Activity {
   return {
     id: crypto.randomUUID(),
@@ -58,7 +62,7 @@ function activity(entity: string, title: string, action: string): Activity {
     action,
   };
 }
-export function PlatformProvider({ children }: { children: ReactNode }) {
+function LocalPlatformProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<PlatformData>(seed);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -213,6 +217,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   return (
     <Context.Provider
       value={{
+        server: false,
         data,
         ready,
         error,
@@ -231,4 +236,22 @@ export function usePlatform() {
   const store = useContext(Context);
   if (!store) throw Error("PlatformProvider is missing");
   return store;
+}
+
+export function PlatformProvider({
+  children,
+  initial,
+  server = false,
+}: {
+  children: ReactNode;
+  initial?: PlatformData;
+  server?: boolean;
+}) {
+  return server && initial ? (
+    <ServerPlatformProvider initial={initial}>
+      {children}
+    </ServerPlatformProvider>
+  ) : (
+    <LocalPlatformProvider>{children}</LocalPlatformProvider>
+  );
 }

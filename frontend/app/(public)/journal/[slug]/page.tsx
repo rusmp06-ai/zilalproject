@@ -1,12 +1,12 @@
 import { ContentDetail } from "@/components/public/ContentDetail";
-import { seed } from "@/data/platform";
+import { publicItem } from "@/services/server";
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const item = seed.collections.journal.find((r) => r.slug === slug);
+  const item = await publicItem("journal", slug);
   return {
     title: `${item?.fields.seoTitle || item?.title || "Журнал"} — ZILAL TRAVEL`,
     description: item?.fields.seoDescription || item?.description,
@@ -18,5 +18,6 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  await publicItem("journal", slug);
   return <ContentDetail entity="journal" slug={slug} />;
 }

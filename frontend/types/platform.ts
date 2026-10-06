@@ -21,6 +21,7 @@ export type Item = {
   image: string;
   status: string;
   fields: Record<string, string>;
+  version?: number;
 };
 export type Activity = {
   id: string;
@@ -37,6 +38,7 @@ export type Settings = {
   heroTitle: string;
   heroDescription: string;
   heroImage: string;
+  version?: number;
 };
 export type PlatformData = {
   version: 1;

@@ -1,12 +1,12 @@
 import { ContentDetail } from "@/components/public/ContentDetail";
-import { seed } from "@/data/platform";
+import { publicItem } from "@/services/server";
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const item = seed.collections.experiences.find((r) => r.slug === slug);
+  const item = await publicItem("experiences", slug);
   return {
     title: `${item?.fields.seoTitle || item?.title || "Впечатления"} — ZILAL TRAVEL`,
     description: item?.fields.seoDescription || item?.description,
@@ -18,5 +18,6 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  await publicItem("experiences", slug);
   return <ContentDetail entity="experiences" slug={slug} />;
 }
