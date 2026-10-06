@@ -53,6 +53,7 @@ export type Field = {
   required?: boolean;
   min?: number;
   max?: number;
+  step?: number;
 };
 export type EntityConfig = {
   label: string;
@@ -62,3 +63,11 @@ export type EntityConfig = {
   statuses: string[];
   publicPath?: string;
 };
+
+export type MutationResult =
+  | { ok: true }
+  | {
+      ok: false;
+      error: string;
+      kind: "storage" | "invalid" | "linked" | "conflict" | "corrupt";
+    };

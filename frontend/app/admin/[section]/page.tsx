@@ -8,5 +8,5 @@ export default async function Page({
 }) {
   const { section } = await params;
   if (!entities.includes(section as Entity)) notFound();
-  return <EntityList entity={section as Entity} />;
+  return <EntityList key={section} entity={section as Entity} />;
 }

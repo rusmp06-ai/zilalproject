@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect, type FormEvent } from "react";
 import { usePlatform } from "@/components/providers/PlatformProvider";
 import { ui } from "@/data/content/platform";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { same, storageKey } from "@/lib/storage";
 import { imageChoices, validImport } from "@/lib/platform";
 import type { Settings as SettingsType } from "@/types/platform";
 export function Settings() {
@@ -12,18 +14,47 @@ export function Settings() {
 function SettingsEditor({ initial }: { initial: SettingsType }) {
   const { data, saveSettings, replace, reset } = usePlatform();
   const [settings, setSettings] = useState(initial);
-  useEffect(() => setSettings(initial), [initial]);
+  const [baseline, setBaseline] = useState(initial);
+  const dirty = !same(settings, baseline);
+  useUnsavedChanges(dirty);
+  const conflict = !same(initial, baseline);
+  useEffect(() => {
+    if (!dirty && !same(initial, baseline)) {
+      setSettings(initial);
+      setBaseline(initial);
+    }
+  }, [initial, baseline, dirty]);
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const upload = useRef<HTMLInputElement>(null);
   const update = (key: keyof SettingsType, value: string) =>
     setSettings((previous) => ({ ...previous, [key]: value }));
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
-    saveSettings(settings);
-    setMessage(ui.admin.saved);
+    if (busy) return;
+    setBusy(true);
+    const result = await saveSettings(settings, baseline);
+    setBusy(false);
+    if (result.ok) {
+      setBaseline(settings);
+      setMessage(ui.admin.saved);
+    } else
+      setMessage(
+        result.kind === "storage" || result.kind === "corrupt"
+          ? ui.admin.saveFailed
+          : result.error,
+      );
   };
   const exportData = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
+    let payload: string;
+    try {
+      payload =
+        localStorage.getItem(storageKey) ?? JSON.stringify(data, null, 2);
+    } catch {
+      setMessage(ui.admin.storageError);
+      return;
+    }
+    const blob = new Blob([payload], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -41,6 +72,16 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
           <h1>{ui.admin.settings}</h1>
         </div>
       </div>
+      {dirty && (
+        <p className="draft-notice" role="status">
+          {ui.admin.dirty}
+        </p>
+      )}
+      {conflict && dirty && (
+        <p className="form-error" role="alert">
+          {ui.admin.conflict}
+        </p>
+      )}
       <div className="admin-grid-two">
         <form onSubmit={submit} className="admin-panel settings-form">
           <h2>{ui.admin.contentSettings}</h2>
@@ -60,6 +101,7 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
                 <textarea
                   aria-label={ui.admin[key]}
                   rows={3}
+                  maxLength={key === "heroDescription" ? 3000 : 300}
                   required
                   value={settings[key]}
                   onChange={(e) => update(key, e.target.value)}
@@ -90,8 +132,8 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
               ))}
             </select>
           </label>
-          <button className="button" type="submit">
-            {ui.admin.save}
+          <button className="button" type="submit" disabled={busy || conflict}>
+            {busy ? ui.admin.saving : ui.admin.save}
           </button>
         </form>
         <section className="admin-panel">
@@ -103,6 +145,7 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
             </button>
             <button
               className="small-button"
+              disabled={busy || dirty}
               onClick={() => upload.current?.click()}
             >
               {ui.admin.import}
@@ -121,8 +164,17 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
                   const parsed: unknown = JSON.parse(await file.text());
                   if (!validImport(parsed)) throw Error();
                   if (window.confirm(ui.admin.importConfirm)) {
-                    replace(parsed);
-                    setMessage(ui.admin.imported);
+                    setBusy(true);
+                    const result = await replace(parsed);
+                    setBusy(false);
+                    if (result.ok) {
+                      setMessage(ui.admin.imported);
+                    } else
+                      setMessage(
+                        result.kind === "storage" || result.kind === "corrupt"
+                          ? ui.admin.saveFailed
+                          : result.error,
+                      );
                   }
                 } catch {
                   setMessage(ui.admin.invalidImport);
@@ -131,21 +183,40 @@ function SettingsEditor({ initial }: { initial: SettingsType }) {
             />
             <button
               className="delete-link"
-              onClick={() => {
+              disabled={busy || dirty}
+              onClick={async () => {
                 if (window.confirm(ui.admin.resetConfirm)) {
-                  reset();
-                  setMessage(ui.admin.saved);
+                  setBusy(true);
+                  const result = await reset();
+                  setBusy(false);
+                  if (result.ok) {
+                    setMessage(ui.admin.saved);
+                  } else
+                    setMessage(
+                      result.kind === "storage" || result.kind === "corrupt"
+                        ? ui.admin.saveFailed
+                        : result.error,
+                    );
                 }
               }}
             >
               {ui.admin.reset}
             </button>
           </div>
-          <p className="demo-note">{ui.admin.noProduction}</p>
+          <p className="demo-note">
+            {dirty ? ui.admin.importPending : ui.admin.noProduction}
+          </p>
         </section>
       </div>
-      {message && (
-        <p className="admin-feedback" role="status">
+      {message && !(conflict && dirty && message === ui.admin.conflict) && (
+        <p
+          className={
+            message === ui.admin.saved || message === ui.admin.imported
+              ? "admin-feedback"
+              : "form-error"
+          }
+          role="status"
+        >
           {message}
         </p>
       )}

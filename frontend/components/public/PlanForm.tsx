@@ -1,17 +1,26 @@
 "use client";
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import Link from "next/link";
 import { usePlatform } from "@/components/providers/PlatformProvider";
 import { ui } from "@/data/content/platform";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { validEmail, emailPattern } from "@/lib/platform";
 import { SectionHeading } from "@/components/ui/Primitives";
 export function PlanForm() {
   const { data, save, ready, error: storageError } = usePlatform();
   const [tour, setTour] = useState("");
-  useEffect(
-    () =>
-      setTour(new URLSearchParams(window.location.search).get("tour") || ""),
-    [],
-  );
+  const initialTour = useRef("");
+  useEffect(() => {
+    if (!ready) return;
+    const requested =
+      new URLSearchParams(window.location.search).get("tour") || "";
+    initialTour.current = data.collections.tours.some(
+      (row) => row.id === requested && row.status === "Опубликован",
+    )
+      ? requested
+      : "";
+    setTour(initialTour.current);
+  }, [ready]);
   const [step, setStep] = useState(0);
   const [values, setValues] = useState({
     country: "",
@@ -30,6 +39,37 @@ export function PlanForm() {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [reference, setReference] = useState("");
+  const [saving, setSaving] = useState(false);
+  const pending = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const dirty =
+    !reference &&
+    !!(
+      values.country ||
+      values.start ||
+      values.end ||
+      values.notes ||
+      values.name ||
+      values.email ||
+      values.phone ||
+      values.budget ||
+      interests.length ||
+      values.people !== "2" ||
+      values.stay !== "Без предпочтений" ||
+      tour !== initialTour.current ||
+      flexible ||
+      consent
+    );
+  const allowNavigation = useUnsavedChanges(dirty);
+  const previousStep = useRef(0);
+  useEffect(() => {
+    if (previousStep.current !== step) {
+      formRef.current
+        ?.querySelector<HTMLElement>("input:not([disabled]), select, textarea")
+        ?.focus();
+      previousStep.current = step;
+    }
+  }, [step]);
   const update = (key: keyof typeof values, value: string) =>
     setValues((v) => ({ ...v, [key]: value }));
   const [dateMin, setDateMin] = useState("");
@@ -42,9 +82,14 @@ export function PlanForm() {
   const selectedTour = data.collections.tours.find(
     (r) => r.id === tour && r.status === "Опубликован",
   );
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    if (tour && !selectedTour) {
+      setError(ui.form.tourUnavailable);
+      setStep(0);
+      return;
+    }
     if (step === 0) {
       if (!values.country.trim()) {
         setError(ui.form.error);
@@ -69,12 +114,20 @@ export function PlanForm() {
       setStep(2);
       return;
     }
-    if (!consent || !values.name.trim() || !values.email.trim()) {
+    if (
+      !consent ||
+      !values.name.trim() ||
+      !values.email.trim() ||
+      !validEmail(values.email.trim())
+    ) {
       setError(ui.form.error);
       return;
     }
+    if (pending.current) return;
+    pending.current = true;
+    setSaving(true);
     const id = "lead-" + crypto.randomUUID();
-    save("leads", {
+    const result = await save("leads", {
       id,
       slug: id,
       title: values.name.trim(),
@@ -102,6 +155,13 @@ export function PlanForm() {
         communication: "",
       },
     });
+    pending.current = false;
+    setSaving(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    allowNavigation();
     setReference(id);
   };
   if (reference)
@@ -112,9 +172,11 @@ export function PlanForm() {
           <h1>{ui.form.success}</h1>
           <p>{ui.form.successText}</p>
           <small>
-            {ui.form.reference}: {reference.slice(0, 13).toUpperCase()}
+            {ui.form.reference}: {reference.replace("lead-", "").toUpperCase()}
           </small>
-          {storageError && <p className="form-error">{storageError}</p>}
+          {storageError && storageError !== error && (
+            <p className="form-error">{storageError}</p>
+          )}
           <div className="form-success-actions">
             <Link className="button" href="/admin/leads">
               {ui.form.admin}
@@ -157,16 +219,26 @@ export function PlanForm() {
               </li>
             ))}
           </ol>
-          <form key={step} onSubmit={submit} className="planning-form">
+          <form
+            ref={formRef}
+            key={step}
+            onSubmit={submit}
+            className="planning-form"
+          >
             {step === 0 && (
               <>
                 <label>
                   {ui.form.tour}
                   <select
                     aria-label={ui.form.tour}
-                    value={selectedTour?.id || ""}
+                    value={tour}
                     onChange={(e) => setTour(e.target.value)}
                   >
+                    {tour && !selectedTour && (
+                      <option value={tour} disabled>
+                        {ui.form.tourUnavailable}
+                      </option>
+                    )}
                     <option value="">{ui.form.custom}</option>
                     {data.collections.tours
                       .filter((r) => r.status === "Опубликован")
@@ -305,6 +377,7 @@ export function PlanForm() {
                   <input
                     autoComplete="email"
                     type="email"
+                    pattern={emailPattern}
                     required
                     maxLength={200}
                     value={values.email}
@@ -337,7 +410,9 @@ export function PlanForm() {
                 {error}
               </p>
             )}
-            {storageError && <p className="form-error">{storageError}</p>}
+            {storageError && storageError !== error && (
+              <p className="form-error">{storageError}</p>
+            )}
             <div className="form-navigation">
               {step > 0 && (
                 <button
@@ -351,8 +426,16 @@ export function PlanForm() {
                   {ui.form.previous}
                 </button>
               )}
-              <button className="button" type="submit" disabled={!ready}>
-                {step === 2 ? ui.form.submit : ui.form.next}
+              <button
+                className="button"
+                type="submit"
+                disabled={!ready || saving}
+              >
+                {saving
+                  ? ui.admin.saving
+                  : step === 2
+                    ? ui.form.submit
+                    : ui.form.next}
               </button>
             </div>
             <p className="demo-note">{ui.demo}</p>
@@ -360,7 +443,10 @@ export function PlanForm() {
         </div>
         <aside className="plan-summary">
           <p className="eyebrow">{ui.form.summary}</p>
-          <h3>{selectedTour?.title || ui.form.custom}</h3>
+          <h3>
+            {selectedTour?.title ||
+              (tour ? ui.form.tourUnavailable : ui.form.custom)}
+          </h3>
           <p>{values.country || ui.form.country}</p>
           <p>
             {flexible

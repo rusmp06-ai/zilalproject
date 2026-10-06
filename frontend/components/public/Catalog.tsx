@@ -5,7 +5,7 @@ import { usePlatform } from "@/components/providers/PlatformProvider";
 import { Landscape, SectionHeading } from "@/components/ui/Primitives";
 import { ui } from "@/data/content/platform";
 import { configs } from "@/data/admin/config";
-import { money } from "@/lib/platform";
+import { money, normalizeSearch } from "@/lib/platform";
 import type { Item } from "@/types/platform";
 export type PublicEntity =
   "tours" | "destinations" | "experiences" | "journal" | "gallery";
@@ -51,6 +51,7 @@ export function ContentCard({
         <Link
           href={`${configs[entity].publicPath}/${item.slug}`}
           className="text-link"
+          aria-label={`${ui.details}: ${item.title}`}
         >
           {ui.details} →
         </Link>
@@ -65,18 +66,28 @@ export function Catalog({ entity }: { entity: PublicEntity }) {
   const [destination, setDestination] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [sort, setSort] = useState("original");
+  const [currency, setCurrency] = useState("");
   const rows = data.collections[entity].filter(
     (r) => r.status === "Опубликован",
   );
   const filtered = rows
     .filter(
       (r) =>
-        (r.title + " " + r.description)
-          .toLowerCase()
-          .includes(query.trim().toLowerCase()) &&
+        normalizeSearch(
+          r.title +
+            " " +
+            r.description +
+            " " +
+            (r.fields.label || "") +
+            " " +
+            (data.collections.destinations.find(
+              (d) => d.id === r.fields.destination,
+            )?.title || ""),
+        ).includes(normalizeSearch(query)) &&
         (!category || r.fields.category === category) &&
         (!destination || r.fields.destination === destination) &&
-        (!difficulty || r.fields.difficulty === difficulty),
+        (!difficulty || r.fields.difficulty === difficulty) &&
+        (!currency || r.fields.currency === currency),
     )
     .sort((a, b) =>
       sort === "priceAsc"
@@ -151,11 +162,35 @@ export function Catalog({ entity }: { entity: PublicEntity }) {
               </select>
             </label>
             <label>
+              {ui.admin.currencyFilter}
+              <select
+                aria-label={ui.admin.currencyFilter}
+                value={currency}
+                onChange={(event) => setCurrency(event.target.value)}
+              >
+                <option value="" disabled={sort.startsWith("price")}>
+                  {ui.all}
+                </option>
+                {["USD", "KGS", "EUR"].map((value) => (
+                  <option key={value}>{value}</option>
+                ))}
+              </select>
+            </label>
+            <label>
               {ui.filters.sort}
               <select
                 aria-label={ui.filters.sort}
                 value={sort}
-                onChange={(e) => setSort(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setSort(next);
+                  if (next.startsWith("price") && !currency)
+                    setCurrency(
+                      rows.find((row) => row.fields.currency === "USD")
+                        ? "USD"
+                        : rows[0]?.fields.currency || "USD",
+                    );
+                }}
               >
                 <option value="original">{ui.filters.original}</option>
                 <option value="priceAsc">{ui.filters.priceAsc}</option>
@@ -173,11 +208,15 @@ export function Catalog({ entity }: { entity: PublicEntity }) {
             setDestination("");
             setDifficulty("");
             setSort("original");
+            setCurrency("");
           }}
         >
           {ui.reset}
         </button>
       </div>
+      {entity === "tours" && sort.startsWith("price") && (
+        <p className="demo-note">{ui.admin.currencySortNote}</p>
+      )}
       <p className="result-count" aria-live="polite">
         {ui.filters.found}: {filtered.length}
       </p>

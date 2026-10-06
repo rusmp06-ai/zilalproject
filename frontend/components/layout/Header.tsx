@@ -1,7 +1,11 @@
 "use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { content as t } from "@/data/content";
 export function Header() {
+  const path = usePathname();
+  useEffect(() => setOpen(false), [path]);
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -15,6 +19,14 @@ export function Header() {
         toggle.current?.focus();
       }
       if (event.key === "Tab") {
+        if (
+          !panel.current?.contains(document.activeElement) &&
+          document.activeElement !== toggle.current
+        ) {
+          event.preventDefault();
+          toggle.current?.focus();
+          return;
+        }
         const links = panel.current?.querySelectorAll<HTMLElement>("a");
         const last = links?.[links.length - 1];
         if (event.shiftKey && document.activeElement === toggle.current) {
@@ -41,7 +53,7 @@ export function Header() {
   return (
     <header className="header">
       <div className="header-inner">
-        <a className="wordmark" href="/" aria-label={t.brand}>
+        <Link className="wordmark" href="/" aria-label={t.brand}>
           <span className="brand-mark" aria-hidden="true">
             △
           </span>
@@ -49,15 +61,23 @@ export function Header() {
             {t.brand.split(" ")[0]}
             <span className="brand-small">{t.brand.split(" ")[1]}</span>
           </span>
-        </a>
+        </Link>
         <nav className="desktop-nav" aria-label={t.footer.navigation}>
           {t.nav.map((item) => (
-            <a key={item.href} href={item.href}>
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={
+                path === item.href || path.startsWith(item.href + "/")
+                  ? "page"
+                  : undefined
+              }
+            >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
-        <a className="header-plan" href="/plan">
+        <Link className="header-plan" href="/plan">
           {t.plan}
           <span aria-hidden="true">
             <svg
@@ -72,7 +92,7 @@ export function Header() {
               <path d="M5 19 19 5M5 5h14v14" />
             </svg>
           </span>
-        </a>
+        </Link>
         <button
           ref={toggle}
           className="menu-toggle"
@@ -88,7 +108,11 @@ export function Header() {
       <div ref={panel} id="mobile-menu" className="mobile-menu" hidden={!open}>
         <nav aria-label={t.footer.navigation}>
           {t.nav.map((item) => (
-            <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+            >
               {item.label}
               <span aria-hidden="true">
                 <svg
@@ -103,11 +127,11 @@ export function Header() {
                   <path d="M5 19 19 5M5 5h14v14" />
                 </svg>
               </span>
-            </a>
+            </Link>
           ))}
-          <a className="button" href="/plan" onClick={() => setOpen(false)}>
+          <Link className="button" href="/plan" onClick={() => setOpen(false)}>
             {t.plan}
-          </a>
+          </Link>
         </nav>
       </div>
     </header>

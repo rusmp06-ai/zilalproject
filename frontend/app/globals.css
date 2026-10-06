@@ -1994,3 +1994,66 @@ details summary::marker {
     font-size: 16px;
   }
 }
+
+/* Readability and keyboard/touch refinements from the frontend audit. */
+.eyebrow,
+.why-number,
+.light .eyebrow {
+  color: #006570;
+}
+.demo-note {
+  color: #52656a;
+}
+.form-steps li {
+  color: #536976;
+}
+.hero .eyebrow {
+  color: #006570;
+}
+.experience-overlay .eyebrow {
+  color: #d4e0d6;
+}
+.footer .eyebrow {
+  color: #94b9b1;
+}
+.draft-notice {
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background: #fff6de;
+  color: #735721;
+  border: 1px solid #e5d6ad;
+  font-size: 12px;
+}
+.admin-shell .table-actions {
+  align-items: center;
+}
+.table-actions > a,
+.table-actions > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 5px;
+}
+.cover-options button,
+.header-plan {
+  min-height: 44px;
+}
+.round-link {
+  width: 44px;
+  height: 44px;
+}
+.footer nav a {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.desktop-nav a[aria-current="page"] {
+  color: #006570;
+}
+.desktop-nav a[aria-current="page"]:after {
+  width: 100%;
+}

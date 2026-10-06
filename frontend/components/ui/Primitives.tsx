@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
 export function Button({
@@ -10,7 +11,10 @@ export function Button({
   secondary?: boolean;
 }) {
   return (
-    <a className={`button ${secondary ? "button-secondary" : ""}`} href={href}>
+    <Link
+      className={`button ${secondary ? "button-secondary" : ""}`}
+      href={href}
+    >
       {children}
       <span aria-hidden="true">
         <svg
@@ -25,7 +29,7 @@ export function Button({
           <path d="M5 19 19 5M5 5h14v14" />
         </svg>
       </span>
-    </a>
+    </Link>
   );
 }
 export function SectionHeading({

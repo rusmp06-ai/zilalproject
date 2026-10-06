@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { usePlatform } from "@/components/providers/PlatformProvider";
 import { ui } from "@/data/content/platform";
 import { money } from "@/lib/platform";
@@ -67,9 +68,9 @@ export function Home() {
           <p className="hero-description">{data.settings.heroDescription}</p>
           <div className="hero-actions">
             <Button href="/tours">{t.hero.action}</Button>
-            <a className="hero-secondary" href="/destinations">
+            <Link className="hero-secondary" href="/destinations">
               {t.hero.secondary} <span aria-hidden="true">↓</span>
-            </a>
+            </Link>
           </div>
         </div>
         <div className="container hero-bottom">
@@ -89,7 +90,7 @@ export function Home() {
         <SectionHeading {...t.experiences} />
         <div className="grid-three">
           {experiences.map((item, index) => (
-            <a
+            <Link
               className="experience-card"
               key={item.id}
               href={`/experiences/${item.slug}`}
@@ -116,7 +117,7 @@ export function Home() {
               <span className="card-number" aria-hidden="true">
                 0{index + 1}
               </span>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -145,7 +146,7 @@ export function Home() {
                       <strong>{item.price}</strong>
                       <small>{t.tours.perPerson}</small>
                     </div>
-                    <a
+                    <Link
                       href={`/tours/${item.slug}`}
                       aria-label={`${t.tours.action}: ${item.title}`}
                       className="round-link"
@@ -161,7 +162,7 @@ export function Home() {
                       >
                         <path d="M5 19 19 5M5 5h14v14" />
                       </svg>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </article>
@@ -177,7 +178,7 @@ export function Home() {
         </div>
         <div className="grid-four">
           {destinations.map((item) => (
-            <a
+            <Link
               href={`/destinations/${item.slug}`}
               key={item.id}
               className="destination-card"
@@ -201,7 +202,7 @@ export function Home() {
                 </span>
               </h3>
               <p>{item.description}</p>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -243,7 +244,7 @@ export function Home() {
               <Landscape src={item.image} alt={item.title} />
               <p className="eyebrow">{item.label}</p>
               <h3>
-                <a href={`/journal/${item.slug}`}>{item.title}</a>
+                <Link href={`/journal/${item.slug}`}>{item.title}</Link>
               </h3>
               <p>{item.description}</p>
             </article>

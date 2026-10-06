@@ -1,10 +1,12 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePlatform } from "@/components/providers/PlatformProvider";
 import { configs } from "@/data/admin/config";
 import { ui } from "@/data/content/platform";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { same } from "@/lib/storage";
 import { imageChoices } from "@/lib/platform";
 import { entities, type Entity, type Item } from "@/types/platform";
 import { Landscape } from "@/components/ui/Primitives";
@@ -21,7 +23,7 @@ export function EntityEditor({ entity, id }: { entity: Entity; id: string }) {
         </Link>
       </div>
     );
-  return <Editor key={id} entity={entity} initial={existing} />;
+  return <Editor key={`${entity}:${id}`} entity={entity} initial={existing} />;
 }
 function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
   const { data, save } = usePlatform();
@@ -34,13 +36,20 @@ function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
         slug: "",
         title: "",
         description: "",
-        status: config.statuses[0],
+        status: config.statuses.includes("Черновик")
+          ? "Черновик"
+          : config.statuses[0],
         image: "/images/lake.svg",
         fields: Object.fromEntries(
           config.fields.map((field) => [field.key, field.options?.[0] || ""]),
         ),
       },
   );
+  const baseline = useRef(item);
+  const dirty = !same(item, baseline.current);
+  const allowNavigation = useUnsavedChanges(dirty);
+  const conflict = !!initial && !same(initial, baseline.current);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const update = (key: keyof Omit<Item, "fields">, value: string) =>
     setItem((previous) => ({ ...previous, [key]: value }));
@@ -60,7 +69,7 @@ function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
           .map((row) => ({ entity: e, row })),
       )
     : [];
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!item.title.trim()) {
       setError(ui.admin.validation);
@@ -85,7 +94,24 @@ function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
       title: item.title.trim(),
       description: item.description.trim(),
     };
-    save(entity, normalized);
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    const result = await save(
+      entity,
+      normalized,
+      initial ? baseline.current : undefined,
+    );
+    setSaving(false);
+    if (!result.ok) {
+      setError(
+        result.kind === "storage" || result.kind === "corrupt"
+          ? ui.admin.saveFailed
+          : result.error,
+      );
+      return;
+    }
+    allowNavigation();
     router.push(`/admin/${entity}`);
   };
   return (
@@ -100,15 +126,27 @@ function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
           </h1>
           <p>{config.description}</p>
         </div>
-        {config.publicPath && initial && entity !== "gallery" && (
-          <Link
-            className="small-button"
-            href={`${config.publicPath}/${initial.slug}`}
-          >
-            {ui.admin.preview}
-          </Link>
-        )}
+        {config.publicPath &&
+          initial?.status === "Опубликован" &&
+          entity !== "gallery" && (
+            <Link
+              className="small-button"
+              href={`${config.publicPath}/${initial.slug}`}
+            >
+              {ui.admin.preview}
+            </Link>
+          )}
       </div>
+      {dirty && (
+        <p className="draft-notice" role="status">
+          {ui.admin.dirty}
+        </p>
+      )}
+      {conflict && (
+        <p className="form-error" role="alert">
+          {ui.admin.conflict}
+        </p>
+      )}
       <form className="entity-form" onSubmit={submit}>
         <div className="admin-panel">
           <div className="editor-fields">
@@ -128,6 +166,7 @@ function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
                   pattern="[a-z0-9]+(-[a-z0-9]+)*"
                   maxLength={100}
                   required
+                  aria-label={ui.admin.slug}
                   readOnly={!!initial}
                   value={item.slug}
                   onChange={(e) => update("slug", e.target.value)}
@@ -147,6 +186,9 @@ function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
                 ))}
               </select>
             </label>
+            {!initial && config.statuses.includes("Черновик") && (
+              <p className="demo-note field-wide">{ui.admin.draftHint}</p>
+            )}
             <label className="field-wide">
               {ui.admin.descriptionField}
               <textarea
@@ -194,11 +236,16 @@ function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
                   </select>
                 ) : (
                   <input
+                    aria-label={f.required ? `${f.label} *` : f.label}
                     type={f.type || "text"}
                     required={f.required}
-                    min={f.min}
+                    min={
+                      f.type === "date" && f.key === "end"
+                        ? item.fields.start
+                        : f.min
+                    }
                     max={f.max}
-                    step={f.type === "number" ? "any" : undefined}
+                    step={f.type === "number" ? (f.step ?? "any") : undefined}
                     maxLength={f.type === "text" || !f.type ? 500 : undefined}
                     value={item.fields[f.key] || ""}
                     onChange={(e) => field(f.key, e.target.value)}
@@ -228,13 +275,17 @@ function Editor({ entity, initial }: { entity: Entity; initial?: Item }) {
           </aside>
         )}
         <div className="editor-actions">
-          {error && (
+          {error && !(conflict && error === ui.admin.conflict) && (
             <p role="alert" className="form-error">
               {error}
             </p>
           )}
-          <button type="submit" className="button">
-            {ui.admin.save}
+          <button
+            type="submit"
+            className="button"
+            disabled={saving || conflict}
+          >
+            {saving ? ui.admin.saving : ui.admin.save}
           </button>
           <Link className="small-button" href={`/admin/${entity}`}>
             {ui.admin.cancel}

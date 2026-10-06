@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { usePlatform } from "@/components/providers/PlatformProvider";
 import { ui } from "@/data/content/platform";
 import { content as t } from "@/data/content";
@@ -8,9 +9,9 @@ export function Footer() {
     <footer id="contact" className="footer">
       <div className="container footer-grid">
         <div>
-          <a className="footer-brand" href="/">
+          <Link className="footer-brand" href="/">
             {t.brand}
-          </a>
+          </Link>
           <p>{t.footer.description}</p>
           <span className="eyebrow">
             {data.settings.address || t.footer.place}
@@ -22,18 +23,18 @@ export function Footer() {
             {t.nav
               .filter((item) => item.href !== "/contacts")
               .map((item) => (
-                <a key={item.href} href={item.href}>
+                <Link key={item.href} href={item.href}>
                   {item.label}
-                </a>
+                </Link>
               ))}
           </nav>
         </div>
         <div>
           <h3>{t.footer.contactTitle}</h3>
           <p>{data.settings.email || t.footer.contactDescription}</p>
-          <a href="/gallery">{ui.catalog.gallery.eyebrow}</a>
+          <Link href="/gallery">{ui.catalog.gallery.eyebrow}</Link>
           <br />
-          <a className="text-link" href="/plan">
+          <Link className="text-link" href="/plan">
             {t.plan}{" "}
             <svg
               aria-hidden="true"
@@ -46,13 +47,13 @@ export function Footer() {
             >
               <path d="M5 19 19 5M5 5h14v14" />
             </svg>
-          </a>
+          </Link>
         </div>
       </div>
       <div className="container footer-bottom">
         <span>© 2026 {t.footer.copyright}</span>
         <span>{t.footer.status}</span>
-        <a href="/">{t.footer.top} ↑</a>
+        <a href="#top">{t.footer.top} ↑</a>
       </div>
     </footer>
   );

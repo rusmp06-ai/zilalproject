@@ -5,7 +5,7 @@ import { usePlatform } from "@/components/providers/PlatformProvider";
 import { configs, leadStatuses } from "@/data/admin/config";
 import { ui } from "@/data/content/platform";
 import type { Entity, Item, Field } from "@/types/platform";
-import { money } from "@/lib/platform";
+import { money, normalizeSearch } from "@/lib/platform";
 export function EntityList({ entity }: { entity: Entity }) {
   const { data, save, remove, ready } = usePlatform();
   const [query, setQuery] = useState("");
@@ -15,15 +15,13 @@ export function EntityList({ entity }: { entity: Entity }) {
   const config = configs[entity];
   const rows = data.collections[entity].filter(
     (row) =>
-      (
+      normalizeSearch(
         row.title +
-        " " +
-        row.description +
-        " " +
-        Object.values(row.fields).join(" ")
-      )
-        .toLowerCase()
-        .includes(query.trim().toLowerCase()) &&
+          " " +
+          row.description +
+          " " +
+          Object.values(row.fields).join(" "),
+      ).includes(normalizeSearch(query)) &&
       (!status || row.status === status),
   );
   const columns = config.fields
@@ -37,15 +35,15 @@ export function EntityList({ entity }: { entity: Entity }) {
       : field.key === "amount"
         ? money(row.fields.amount, row.fields.currency)
         : row.fields[field.key] || "—";
-  const deleteItem = (row: Item) => {
+  const deleteItem = async (row: Item) => {
     if (
       !window.confirm(`${ui.admin.confirm}
 ${row.title}
 ${ui.admin.confirmText}`)
     )
       return;
-    if (remove(entity, row.id)) setMessage(ui.admin.deleted);
-    else setMessage(ui.admin.linked);
+    const result = await remove(entity, row.id, row);
+    setMessage(result.ok ? ui.admin.deleted : result.error);
   };
   return (
     <>
@@ -71,7 +69,11 @@ ${ui.admin.confirmText}`)
         </label>
         <label>
           {ui.admin.status}
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select
+            aria-label={ui.admin.status}
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
             <option value="">{ui.all}</option>
             {config.statuses.map((v) => (
               <option key={v}>{v}</option>
@@ -90,7 +92,12 @@ ${ui.admin.confirmText}`)
         )}
       </div>
       {message && (
-        <p role="status" className="admin-feedback">
+        <p
+          role="status"
+          className={
+            message === ui.admin.deleted ? "admin-feedback" : "form-error"
+          }
+        >
           {message}
         </p>
       )}
@@ -119,9 +126,15 @@ ${ui.admin.confirmText}`)
                       <select
                         aria-label={`${ui.admin.status}: ${row.title}`}
                         value={row.status}
-                        onChange={(e) =>
-                          save(entity, { ...row, status: e.target.value })
-                        }
+                        onChange={async (e) => {
+                          const result = await save(
+                            entity,
+                            { ...row, status: e.target.value },
+                            row,
+                          );
+                          if (!result.ok) setMessage(result.error);
+                          else setMessage("");
+                        }}
                       >
                         {leadStatuses.map((v) => (
                           <option key={v}>{v}</option>
@@ -138,12 +151,14 @@ ${ui.admin.confirmText}`)
           <table className="admin-table">
             <thead>
               <tr>
-                <th>{ui.admin.titleField}</th>
+                <th scope="col">{ui.admin.titleField}</th>
                 {columns.map((field) => (
-                  <th key={field.key}>{field.label}</th>
+                  <th key={field.key} scope="col">
+                    {field.label}
+                  </th>
                 ))}
-                <th>{ui.admin.status}</th>
-                <th>{ui.admin.actions}</th>
+                <th scope="col">{ui.admin.status}</th>
+                <th scope="col">{ui.admin.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -170,11 +185,15 @@ ${ui.admin.confirmText}`)
                   </td>
                   <td>
                     <div className="table-actions">
-                      <Link href={`/admin/${entity}/${row.id}`}>
+                      <Link
+                        href={`/admin/${entity}/${row.id}`}
+                        aria-label={`${ui.admin.edit}: ${row.title}`}
+                      >
                         {ui.admin.edit}
                       </Link>
                       <button
                         className="delete-link"
+                        aria-label={`${ui.admin.remove}: ${row.title}`}
                         onClick={() => deleteItem(row)}
                       >
                         {ui.admin.remove}
